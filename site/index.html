@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PAW U — VERSUS</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>">
+<meta name="theme-color" content="#0a090b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+/* JS и CSS грузим с меткой времени: правки видны сразу, без Ctrl+F5. Картинок это не касается. */
+(function(){var t=Date.now();document.write('<link rel="stylesheet" href="assets/css/versus.css?'+t+'">');})();
+</script>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <a class="logo" href="#/">PAW<b>U</b></a>
+    <div class="top-mid" id="top-mid"></div>
+    <nav class="top-nav" id="nav"></nav>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <div class="pl" id="pl" data-note="0">
+    <div class="pl-note" id="pl-note"></div>
+    <button class="pl-cover" id="pl-open" aria-label="Открыть плеер">
+      <span class="pl-cover-im" id="pl-cover"></span>
+      <span class="pl-exp"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>
+    </button>
+    <div class="pl-meta">
+      <a class="pl-nm" id="pl-nm" href="#/">Тишина</a>
+      <div class="pl-sb" id="pl-sb">выбери трек</div>
+    </div>
+    <div class="pl-c">
+      <button id="p-prev" aria-label="Назад">◀◀</button>
+      <button id="p-play" class="big" aria-label="Play">▶</button>
+      <button id="p-next" aria-label="Вперёд">▶▶</button>
+    </div>
+    <div class="pl-s">
+      <span class="pl-t" id="p-cur">0:00</span>
+      <div class="pl-bar" id="p-bar"><div class="pl-f" id="p-fill"></div></div>
+      <span class="pl-t" id="p-dur">0:00</span>
+    </div>
+    <div class="pl-v">
+      <button id="p-mute" aria-label="Звук"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/><path class="x" d="m16 9 6 6m0-6-6 6"/></svg></button>
+      <input type="range" id="p-vol" min="0" max="1" step="0.01" value="0.5" aria-label="Громкость">
+    </div>
+    <a class="pl-dl" id="p-dl" download>скачать</a>
+  </div>
+
+</div>
+
+<!-- всплывающая обложка (наведение на обложку в плеере) -->
+<div class="peek" id="peek" aria-hidden="true"></div>
+
+<!-- большой плеер (клик по обложке в плеере) -->
+<section class="np" id="np" aria-hidden="true">
+  <div class="np-bg" id="np-bg"></div>
+  <button class="np-x" id="np-x" aria-label="Свернуть"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+  <div class="np-in" id="np-in">
+    <div class="np-cover" id="np-cover"></div>
+    <div class="np-side">
+      <a class="np-grp" id="np-grp" href="#/"></a>
+      <a class="np-t" id="np-t" href="#/"></a>
+      <div class="np-s" id="np-s"></div>
+      <div class="np-seek">
+        <span class="np-tm" id="np-cur">0:00</span>
+        <div class="np-bar" id="np-bar"><div class="np-f" id="np-fill"></div></div>
+        <span class="np-tm" id="np-dur">0:00</span>
+      </div>
+      <div class="np-c">
+        <button id="np-prev" aria-label="Назад">◀◀</button>
+        <button id="np-play" class="big" aria-label="Play">▶</button>
+        <button id="np-next" aria-label="Вперёд">▶▶</button>
+      </div>
+      <div class="np-v">
+        <button id="np-mute" aria-label="Звук"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/><path class="x" d="m16 9 6 6m0-6-6 6"/></svg></button>
+        <input type="range" id="np-vol" min="0" max="1" step="0.01" value="0.5" aria-label="Громкость">
+      </div>
+      <div class="np-q" id="np-qbox"><div class="np-ql" id="np-ql">Дальше</div><div id="np-q"></div></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){var t=Date.now();['data','gallery','core','versus'].forEach(function(n){document.write('<script src="assets/js/'+n+'.js?'+t+'"><\/script>');});})();
+</script>
+</body>
+</html>
