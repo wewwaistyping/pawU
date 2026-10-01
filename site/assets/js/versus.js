@@ -25,25 +25,29 @@ const INK  = { red:"var(--hk)", violet:"var(--hb)", orange:"var(--tj)", blue:"va
 const colorOf = o => TEAM[o?.id] || TEAM[o?.group] || INK[o?.ink] || "var(--hk)";
 
 /* ============================================================
-   КАРТИНКА С ЗАГЛУШКОЙ — IMG/<папка>/<id>.(jpg|png|webp|jpeg)
+   КАРТИНКА С ЗАГЛУШКОЙ — IMG/<папка>/<id>.(webp|jpg|png|jpeg)
+   size:"sm"|"md" — сначала уменьшенная копия IMG/<папка>/sm|md/<id>.webp
+   (кружки, вкладки, карточки, плеер); нет копии — берём полный размер
    ============================================================ */
-const EXT = ["jpg", "png", "webp", "jpeg"];
+const EXT = ["webp", "jpg", "png", "jpeg"];
+const imgSrcs = (b, s) => [...(s ? [b.replace(/[^/]+$/, `${s}/$&`) + ".webp"] : []), ...EXT.map(x => `${b}.${x}`)];
 function im(kind, id, opt = {}) {
-  const base = `../IMG/${kind}/${id}`;
+  const base = `../IMG/${kind}/${id}`, s = opt.size || "";
   const init = (opt.initial || id[0]).toUpperCase();
   return `<figure class="im ${opt.cls || ""}">
     <div class="ph"><span>${esc(init)}</span><small>IMG/${esc(kind)}/${esc(id)}.jpg</small></div>
-    <img alt="" data-b="${esc(base)}" data-i="0" src="${esc(base)}.jpg" decoding="async"
+    <img alt="" data-b="${esc(base)}" data-s="${s}" data-i="0" src="${esc(imgSrcs(base, s)[0])}" decoding="async"
          onerror="PAWimg(this)" onload="this.parentNode.classList.add('ok')">
   </figure>`;
 }
 window.PAWimg = el => {
-  const i = +el.dataset.i + 1;
-  if (i < EXT.length) { el.dataset.i = i; el.src = `${el.dataset.b}.${EXT[i]}`; return; }
+  const list = imgSrcs(el.dataset.b, el.dataset.s), i = +el.dataset.i + 1;
+  if (i < list.length) { el.dataset.i = i; el.src = list[i]; return; }
   el.parentNode?.classList.add("none");
   el.remove();
 };
 const face = (n, opt = {}) => im("people", n.id, { initial: n.short[0], ...opt });
+const SM = { size:"sm" }, MD = { size:"md" };
 
 /* ---------- кто выбран слева и справа ---------- */
 const ST = { L: load("pawu-L", "troy"), R: load("pawu-R", "selene") };
@@ -78,7 +82,7 @@ function side(s, g, sel) {
   return `<section class="side ${s}" data-side="${s}" data-team="${g.id}" style="--c:${TEAM[g.id]}">
     <div class="roster">${g.members.map(id => {
       const m = npc(id);
-      return `<button class="tab ${id === sel ? "on" : ""}" data-side="${s}" data-id="${id}" title="${esc(m.short)}">${face(m)}</button>`;
+      return `<button class="tab ${id === sel ? "on" : ""}" data-side="${s}" data-id="${id}" title="${esc(m.short)}">${face(m, SM)}</button>`;
     }).join("")}</div>
     <a class="art" href="#/p/${n.id}" aria-label="${esc(n.name)}">${face(n, { cls:"art-im" })}</a>
     <div class="nb">
@@ -108,7 +112,7 @@ function home() {
     <div class="mid">
       <div class="vs">VS</div>
       <div class="when">${esc(T(ev.when))}<br>${esc(T(ev.where))}</div>
-      <a class="guest" href="#/p/tj">${face(tj)}<span>${esc(U().guest)}<b>TJ</b></span></a>
+      <a class="guest" href="#/p/tj">${face(tj, SM)}<span>${esc(U().guest)}<b>TJ</b></span></a>
     </div>
     ${side("R", hb, ST.R)}
   </div>`;
@@ -151,7 +155,7 @@ function sheet(id) {
       ${quotes.length ? `<blockquote class="quote">«${Mx(quotes[0])}»</blockquote>` : ""}
       ${rel.length ? `<h3 class="h"><a href="#/links" onclick="PAWlk('${id}')">${esc(u.rel)} →</a></h3><div class="rel">${rel.map(r => {
         const oid = r.a === id ? r.b : r.a, o = npc(oid); if (!o) return "";
-        return `<a href="#/p/${oid}">${face(o)}<span><b>${esc(o.short)}</b><small>${Mx(r.label)}</small></span></a>`;
+        return `<a href="#/p/${oid}">${face(o, SM)}<span><b>${esc(o.short)}</b><small>${Mx(r.label)}</small></span></a>`;
       }).join("")}</div>` : ""}
       ${g?.solo ? `<h3 class="h">${esc(u.tracks)}</h3>${ts.length ? tracks(ts) : `<p class="soon">${esc(u.nothing)}</p>`}` : ""}
     </div>
@@ -163,7 +167,7 @@ function gsheet(id) {
   const ts = groupTracks(g.id), u = U();
   return `<div class="sheet" style="--c:${TEAM[g.id]}">
     <div class="sheet-art grid-art">${g.members.map(m => {
-      const n = npc(m); return `<a class="ga" href="#/p/${m}">${face(n)}<span>${esc(n.short)}</span></a>`;
+      const n = npc(m); return `<a class="ga" href="#/p/${m}">${face(n, MD)}<span>${esc(n.short)}</span></a>`;
     }).join("")}</div>
     <div class="sheet-body">
       ${back()}
@@ -214,7 +218,7 @@ function place(id) {
       <p class="lead">${Mx(l.oneLiner)}</p>
       <div class="prose">${(T(l.bio) || []).map(p => `<p>${Mx(p)}</p>`).join("")}</div>
       ${res.length ? `<h3 class="h">${esc(u.here)}</h3><div class="rel">${res.map(n =>
-        `<a href="#/p/${n.id}">${face(n)}<span><b>${esc(n.short)}</b><small>${Mx(n.role)}</small></span></a>`).join("")}</div>` : ""}
+        `<a href="#/p/${n.id}">${face(n, SM)}<span><b>${esc(n.short)}</b><small>${Mx(n.role)}</small></span></a>`).join("")}</div>` : ""}
     </div>
   </div>`;
 }
@@ -233,7 +237,7 @@ const places = () => `<div class="ls">
 
 /* карточка персонажа для страницы лора */
 const charCard = n => `<a class="cc" href="#/p/${n.id}" style="--c:${colorOf(n)}">
-  ${face(n)}
+  ${face(n, MD)}
   <div class="cc-b">
     <div class="cc-n">${esc(n.name)}</div>
     <div class="cc-r">${Mx(n.role)}</div>
@@ -249,7 +253,7 @@ const lore = () => {
   return `<div class="ls">
   ${back()}
   <h1 class="nm-xl">${esc(u.lore)}</h1>
-  <figure class="lore-vid"><video src="../IMG/video/pawu.mp4" poster="../IMG/video/pawu.jpg" controls playsinline preload="metadata"></video></figure>
+  <figure class="lore-vid"><video src="../IMG/video/pawu.mp4" poster="../IMG/video/pawu.webp" controls playsinline preload="metadata"></video></figure>
   <div class="lore-grid">${SITE.lore.map(b => `<div class="lore-card"><h3>${esc(T(b.title))}</h3>${(T(b.body) || []).map(p => `<p>${Mx(p)}</p>`).join("")}</div>`).join("")}</div>
 
   <h2 class="h2">${esc(u.chars)}</h2>
@@ -307,7 +311,7 @@ function linksPage() {
       const anchor = Math.cos(p.a) > .3 ? "start" : Math.cos(p.a) < -.3 ? "end" : "middle";
       return `<g class="node" data-id="${n.id}" style="--c:${colorOf(n)}">
         <circle class="ring" cx="${p.x}" cy="${p.y}" r="40"/>
-        <image href="../IMG/people/${n.id}.jpg" data-b="../IMG/people/${n.id}" data-i="0" x="${p.x - 36}" y="${p.y - 36}" width="72" height="72"
+        <image href="../IMG/people/sm/${n.id}.webp" data-b="../IMG/people/${n.id}" data-s="sm" data-i="0" x="${p.x - 36}" y="${p.y - 36}" width="72" height="72"
                preserveAspectRatio="xMidYMin slice" clip-path="url(#cp-${n.id})" onerror="PAWsvg(this)"/>
         <text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle">${esc(n.short)}</text>
       </g>`; }).join("")}</g>
@@ -322,9 +326,9 @@ function linksPage() {
     </div>
   </div>`;
 }
-window.PAWsvg = el => {   /* перебор расширений для <image> в SVG */
-  const i = +el.dataset.i + 1;
-  if (i < EXT.length) { el.dataset.i = i; el.setAttribute("href", `${el.dataset.b}.${EXT[i]}`); return; }
+window.PAWsvg = el => {   /* перебор копий и расширений для <image> в SVG */
+  const list = imgSrcs(el.dataset.b, el.dataset.s), i = +el.dataset.i + 1;
+  if (i < list.length) { el.dataset.i = i; el.setAttribute("href", list[i]); return; }
   el.remove();
 };
 function lkPanel() {
@@ -333,13 +337,13 @@ function lkPanel() {
   const n = npc(LK); if (!n) return "";
   const rel = SITE.links.filter(x => x.a === LK || x.b === LK);
   return `<div class="lk-head" style="--c:${colorOf(n)}">
-      ${face(n)}
+      ${face(n, SM)}
       <div><div class="team">${Mx(n.role)}</div><b>${esc(n.name)}</b>
         <a class="lk-open" href="#/p/${n.id}">${esc(u.openSheet)} ↗</a></div>
     </div>
     <div class="lk-rows">${rel.map(r => {
       const oid = r.a === LK ? r.b : r.a, o = npc(oid); if (!o || o.side) return "";
-      return `<button class="lk-row" data-id="${oid}" style="--c:${colorOf(o)}">${face(o)}<span><b>${esc(o.short)}</b><small>${Mx(r.label)}</small></span></button>`;
+      return `<button class="lk-row" data-id="${oid}" style="--c:${colorOf(o)}">${face(o, SM)}<span><b>${esc(o.short)}</b><small>${Mx(r.label)}</small></span></button>`;
     }).join("")}</div>`;
 }
 function lkSelect(id) {
@@ -381,6 +385,8 @@ async function listDir(url) {
 const normName = x => String(x).toLowerCase().replace(/^the\s+/, "").replace(/[^a-zа-яё0-9]+/g, "");
 const locOfFolder = d => SITE.locations.find(x => normName(x.id) === normName(d) || normName(x.name) === normName(d));
 const galURL = (d, f) => PLACES_BASE + encodeURIComponent(d) + "/" + encodeURIComponent(f);
+const thumbOf = u => u.replace(/\/([^/]+)\.\w+$/, "/sm/$1.webp");   /* копия кадра: <папка>/sm/<кадр>.webp */
+window.PAWfull = el => { el.onerror = null; el.removeAttribute("srcset"); el.src = el.dataset.full; };   /* копии нет — полный кадр */
 function loadGalleries() {
   if (GAL.done) return GAL.done;
   GAL.done = (async () => {
@@ -440,7 +446,7 @@ async function mountPlaceGallery(l) {
   const list = by[l.id]; if (!list || !list.length) return;
   const art = $("#view .sheet-art"); if (!art || art.dataset.loc !== l.id) return;
   art.innerHTML = `<figure class="im ok hero-im"><img src="${list[0]}" alt=""></figure>` + (list.length > 1 ?
-    `<div class="gal">${list.map((u, i) => `<button class="${i ? "" : "on"}" data-i="${i}"><img src="${u}" alt="" loading="lazy"></button>`).join("")}</div>` : "");
+    `<div class="gal">${list.map((u, i) => `<button class="${i ? "" : "on"}" data-i="${i}"><img src="${thumbOf(u)}" data-full="${u}" onerror="PAWfull(this)" alt="" loading="lazy"></button>`).join("")}</div>` : "");
   art.classList.add("has-gal");
   art.addEventListener("click", e => {
     const b = e.target.closest(".gal button");
@@ -448,12 +454,13 @@ async function mountPlaceGallery(l) {
     if (e.target.closest(".hero-im")) lbOpen(list, +($(".gal button.on", art)?.dataset.i || 0));
   });
 }
-/* превью в списке мест */
+/* превью в списке мест: на компе копия, на телефоне превью во всю ширину — полный кадр */
 async function mountPlaceThumbs() {
   const by = await loadGalleries();
   $$("#view .row[data-loc]").forEach(r => {
     const list = by[r.dataset.loc]; const th = $(".row-th", r);
-    if (list && th) th.innerHTML = `<img src="${list[0]}" alt="" loading="lazy">`;
+    if (list && th) th.innerHTML = `<img src="${thumbOf(list[0])}" srcset="${thumbOf(list[0])} 640w, ${list[0]} 1376w"
+      sizes="(max-width:860px) 100vw, 190px" data-full="${list[0]}" onerror="PAWfull(this)" alt="" loading="lazy">`;
   });
 }
 
@@ -509,7 +516,7 @@ const NP = { box:$("#np"), bg:$("#np-bg"), cover:$("#np-cover"), grp:$("#np-grp"
              play:$("#np-play"), cur:$("#np-cur"), dur:$("#np-dur"), fill:$("#np-fill"),
              q:$("#np-q"), qbox:$("#np-qbox"), ql:$("#np-ql") };
 const PEEK = $("#peek");
-const coverFig = t => im("covers", t.id, { initial: clean(t.title)[0] });
+const coverFig = (t, size) => im("covers", t.id, { initial: clean(t.title)[0], size });
 
 function npText(m) {
   NP.grp.textContent = m.g?.name || ""; NP.grp.href = m.g ? `#/g/${m.g.id}` : "#/";
@@ -521,7 +528,7 @@ function npQueue() {
   for (let k = 1; k < q.length && rows.length < 4; k++) {
     const j = (i + k) % q.length; if (seen.has(j)) continue; seen.add(j);
     const t = track(q[j].t), v = t.versions[q[j].v];
-    rows.push(`<button class="np-row" data-qi="${j}">${coverFig(t)}<span><b>${esc(clean(v.label))}</b><small>${esc(group(t.group)?.short || "")} · ${esc(v.lang)}</small></span></button>`);
+    rows.push(`<button class="np-row" data-qi="${j}">${coverFig(t, "sm")}<span><b>${esc(clean(v.label))}</b><small>${esc(group(t.group)?.short || "")} · ${esc(v.lang)}</small></span></button>`);
   }
   NP.q.innerHTML = rows.join(""); NP.qbox.hidden = !rows.length;
 }
@@ -531,7 +538,7 @@ function npFill(m) {
   NP.bg.style.backgroundImage = "none";
   const img = $("img", NP.cover);   /* фон — та же обложка, размытая; ждём, пока сайт подберёт расширение */
   if (img) img.addEventListener("load", () => { NP.bg.style.backgroundImage = `url("${img.src}")`; }, { once: true });
-  PEEK.innerHTML = coverFig(m.t);
+  PEEK.innerHTML = coverFig(m.t, "md");
   npText(m); npQueue();
 }
 function playerIdleText() {
@@ -549,7 +556,7 @@ audio.on(ev => {
     E.nm.innerHTML = esc(clean(m.v.label)) + (m.t.top ? BOLT : ""); E.nm.href = `#/t/${m.t.id}`;
     E.sb.textContent = `${clean(m.g?.short || "")} · ${m.v.lang}`;
     E.dl.href = m.v.audio || "#";
-    E.cover.innerHTML = im("covers", m.t.id, { initial: clean(m.t.title)[0] });
+    E.cover.innerHTML = coverFig(m.t, "sm");
     E.box.style.setProperty("--c", TEAM[m.g?.id] || "var(--hk)");
     E.box.dataset.note = "0";
     npFill(m);
@@ -652,7 +659,7 @@ function showGate() {
   const v = document.createElement("video");
   v.className = "gate-bg"; v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto";
   v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
-  v.poster = "../IMG/video/pawu.jpg"; v.src = "../IMG/video/pawu-bg.mp4";
+  v.poster = "../IMG/video/pawu.webp"; v.src = "../IMG/video/pawu-bg.mp4";
   const wrap = document.createElement("div"); wrap.className = "gate-wrap"; wrap.innerHTML = gateHTML();
   g.append(v, wrap); document.body.appendChild(g);
   if (!matchMedia("(prefers-reduced-motion: reduce)").matches) v.play().catch(() => {});
